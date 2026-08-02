@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> cb01e7324c742b7d178b2d980499fd021ed87eb9
 // C. Part3: Bonus (2 Grades): 
 // How to deliver the bonus? 
 // 1- Solve the problem Counter II on LeetCode 

@@ -231,4 +231,9 @@ Type coercion is when JavaScript automatically converts one type into another du
 */
 
 
+<<<<<<< HEAD
  
+=======
+ 
+
+>>>>>>> cb01e7324c742b7d178b2d980499fd021ed87eb9
