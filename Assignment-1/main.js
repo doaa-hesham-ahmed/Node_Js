@@ -232,11 +232,3 @@ Type coercion is when JavaScript automatically converts one type into another du
 
 
  
-// C. Part3: Bonus (2 Grades): 
-// How to deliver the bonus? 
-// 1- Solve the problem Counter II on LeetCode 
-
-// 2- Inside your assignment folder, create a SEPARATE FILE and name it “bonus.js” 
-
-// 3- Copy the code that you have submitted on the website inside ”bonus.js” file
-
