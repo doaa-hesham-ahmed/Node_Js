@@ -337,6 +337,7 @@
 
 
 //======================================================================================
+
 // 1.Create an API that adds a new user to your users stored in a JSON file (1 Grade)
 // (ensure that the email of the new user doesn’t exist before)
 // URL: POST /user
@@ -404,73 +405,70 @@
 // o
 // URL: PATCH /user/id
 
-// const http = require("node:http");
-// const fs = require("node:fs");
+const http = require("node:http");
+const fs = require("node:fs");
 
-// const server = http.createServer((req, res) => {
+const server = http.createServer((req, res) => {
 
-//     if (req.method === "PATCH" && req.url.startsWith("/user/")) {
-//         const id = Number(req.url.split("/")[2]);
-//         let body = "";
-//         req.on("data", chunk => {
-//             body += chunk;
-//         });
+    if (req.method === "PATCH" && req.url.startsWith("/user/")) {
+        const id = Number(req.url.split("/")[2]);
+        let body = "";
+        req.on("data", chunk => {
+            body += chunk;
+        });
+        req.on("end", () => {
 
+            const updateData = JSON.parse(body);
+            fs.readFile("Assignment-2/users.json", "utf8", (err, data) => {
 
-//         req.on("end", () => {
+                if (err) {
+                    res.writeHead(500, {"Content-Type": "application/json"});
+                    return res.end(JSON.stringify({ message: "Error reading file"}));
+                }
+                const usersData = JSON.parse(data);
+                const user = usersData.users.find(
+                    user => user.id === id
+                );
 
-//             const updateData = JSON.parse(body);
-//             fs.readFile("Assignment-2/users.json", "utf8", (err, data) => {
+                if (!user) {
 
-//                 if (err) {
-//                     res.writeHead(500, {"Content-Type": "application/json"});
-//                     return res.end(JSON.stringify({ message: "Error reading file"}));
-//                 }
-//                 const usersData = JSON.parse(data);
-//                 const user = usersData.users.find(
-//                     user => user.id === id
-//                 );
+                    res.writeHead(404, {"Content-Type": "application/json"});
+                    return res.end(JSON.stringify({message: "User not found"}));
+                }
 
-//                 if (!user) {
+                if (updateData.name) {
+                    user.name = updateData.name;
+                }
+                if (updateData.age) {
+                    user.age = updateData.age;
+                }
+                if (updateData.email) {
+                    user.email = updateData.email;
+                }
 
-//                     res.writeHead(404, {"Content-Type": "application/json"});
-//                     return res.end(JSON.stringify({message: "User not found"}));
-//                 }
+                fs.writeFile("Assignment-2/users.json",JSON.stringify(usersData, null, 2),err => {
 
+                        if (err) {
+                            res.writeHead(500, {"Content-Type": "application/json"});
+                            return res.end(JSON.stringify({message: "Error writing file"}));
+                        }
 
-//                 if (updateData.name) {
-//                     user.name = updateData.name;
-//                 }
-//                 if (updateData.age) {
-//                     user.age = updateData.age;
-//                 }
-//                 if (updateData.email) {
-//                     user.email = updateData.email;
-//                 }
+                        res.writeHead(200, {"Content-Type": "application/json"});
+                        res.end(JSON.stringify({message: "User updated successfully",user: user}));
 
-//                 fs.writeFile("Assignment-2/users.json",JSON.stringify(usersData, null, 2),err => {
+                    }
+                );
+            });
+        });
 
-//                         if (err) {
-//                             res.writeHead(500, {"Content-Type": "application/json"});
-//                             return res.end(JSON.stringify({message: "Error writing file"}));
-//                         }
+    } else {
 
-//                         res.writeHead(200, {"Content-Type": "application/json"});
-//                         res.end(JSON.stringify({message: "User updated successfully",user: user}));
+        res.writeHead(404, {"Content-Type": "application/json"});
+        res.end(JSON.stringify({ message: "Route not found"}));
+    }
 
-//                     }
-//                 );
-//             });
-//         });
-
-//     } else {
-
-//         res.writeHead(404, {"Content-Type": "application/json"});
-//         res.end(JSON.stringify({ message: "Route not found"}));
-//     }
-
-// });
-// server.listen(3000, () => {console.log("Server running on port 3000");});
+});
+server.listen(3000, () => {console.log("Server running on port 3000");});
 
 
 // 3)Create an API that deletes a User by ID. The user id should be retrieved from the URL (1 Grade)
@@ -525,7 +523,7 @@
 // server.listen(3000, () => {console.log("Server running on port 3000");});
 
 
-//4)Create an API that gets all users from the JSON file. (1 Grade)
+// 4)Create an API that gets all users from the JSON file. (1 Grade)
 // o
 // URL: GET /user
 
