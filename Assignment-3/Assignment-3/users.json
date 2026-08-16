@@ -1,0 +1,46 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Ahmed",
+      "email": "ahmed@gmail.com",
+      "age": 25
+    },
+    {
+      "id": 2,
+      "name": "Doaa",
+      "email": "doaa@gmail.com",
+      "age": 20
+    },
+    {
+      "id": 3,
+      "name": "Roaa",
+      "age": 20,
+      "email": "roaa@gmail.com"
+    },
+    {
+      "id": 4,
+      "name": "Meana",
+      "age": 22,
+      "email": "mena@gmail.com"
+    },
+    {
+      "id": 5,
+      "name": "mai",
+      "age": 23,
+      "email": "mai@gmail.com"
+    },
+    {
+      "id": 6,
+      "name": "Ali1",
+      "age": 33,
+      "email": "ali1@gmail.com"
+    },
+    {
+      "id": 7,
+      "name": "Mohamoud",
+      "age": 30,
+      "email": "mahamoud@gmail.com"
+    }
+  ]
+}

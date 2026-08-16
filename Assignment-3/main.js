@@ -64,284 +64,211 @@
 
 // Part2: Simple CRUD Operations Using Express.js:
 
+import express from "express";
+import { Router } from "express";
+import fs, { readFile } from "fs/promises";
+import { json } from "stream/consumers";
 
-// ı.For all the following tasks, you must use the fs module to read and write data from a JSON file (e.g.,
-// users.json). Do not store or manage data using arrays. (1 Grades)
-// 1. Create an API that adds a new user to your users stored in a JSON file. (ensure that the email of the new user doesn’t exist before)(1
-// Grades)
-// o URL: POST /user
+const PORT = 3000;
+const app = express();
+app.use(express.json());
+const userRouter = Router();
+app.use("/users", userRouter);
 
-// const express = require("express");
-// const fs = require("node:fs");
+async function readUser() {
+  try {
+    const data = await fs.readFile("users.json", { encoding: "utf-8" });
+    return JSON.parse(data);
+  } catch (error) {
+    return [];
 
-// const app = express();
+  }
+}
 
-// app.use(express.json());
+async function writerUser(users) {
+  try {
+    const data = await fs.writeFile("users.json", JSON.stringify(users, null, 2), "utf8");
+  } catch (error) {
+    console.log(error);
 
-// app.post("/user", (req, res) => {
+  }
+}
 
-//     const newUser = {
-//     id: Date.now(),
-//     ...req.body
-// };
-//     fs.readFile("D:\\node_js\\Assignment-3\\users.json", "utf8", (err, data) => {
-//         if (err) {
-//             return res.status(500).json({ message: "Error reading file" });
-//         }
-//         const usersData = JSON.parse(data);
-//         const emailExists = usersData.users.find(user => user.email === newUser.email);
+//get Add user 
+userRouter.post("/add-user", async (req, res) => {
+  try {
+    const { name, email, age } = req.body;
+    const users = await readUser();
+    const existemail = users.find(user => user.email === email)
+    if (existemail) {
+      return res.status(400).json({ message: "email already exist" });
 
-//         if (emailExists) {
-//             return res.status(400).json({message: "Email already exists"});
-//         }
-//         newUser.id = usersData.users.length + 1;
-//         // newUser.id = Date.now();
+    }
+    const newUser = {
+      id: Date.now(),
+      name,
+      email,
+      age
+    };
+    users.push(newUser);
+    await writerUser(users);
+    res.status(201).json({ message: "user is Added Successfully", user: newUser })
+  } catch (error) {
+    return res.status(500).json({ message: "user not Added" });
+  }
+});
 
-//         usersData.users.push(newUser);
-//         fs.writeFile("users.json",JSON.stringify(usersData, null, 2),(err) => {
+//update user
+userRouter.patch("/update-user/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { name, email, age } = req.body;
+    const users = await readUser();
+    const findIndexUser = users.findIndex(user => user.id == id);
 
-//                 if (err) {
-//                     return res.status(500).json({ message: "Error writing file"});
-//                 }
-//                 res.status(201).json({message: "User added successfully",user: newUser});
-//             }
-//         );
-//     });
-// });
-// app.listen(3000, () => {console.log("Server running on port 3000");});
+    if (findIndexUser == -1) {
+      return res.status(404).json({ message: "user not exist" });
+    }
+    if (name) users[findIndexUser].name = name;
+    if (age) users[findIndexUser].age = age;
+    if (email) {
+      const existEmail = users.find(user => user.email == email && user.id != id);
+      if (existEmail) {
+        return res.status(400).json({ message: "user email already exist" });
+      }
+      users[findIndexUser].email = email;
+    }
+    await writerUser(users);
+    return res.status(200).json({ message: "user is updated successfully", user: users[findIndexUser] });
 
+  } catch (error) {
+    console.log({ stack: error.stack, message: error.message });
 
+    res.status(500).json({ message: "server error" });
+  }
+});
 
-// 2. Create an API that updates an existing user's name, age, or email by their ID. The user ID should be retrieved from the params. (1 Grade)
-// Note: Remember to update the corresponding values in the JSON file
-// o URL: PATCH /user/:id
+//delete user by id
+userRouter.delete("/delete-user/:id",async(req,res)=>{
+  try {
+    const {id} = req.params;
+  const users = await readUser();
+  const finduser= users.findIndex(user => user.id === Number(id));
+  if(finduser===-1){
+    return res.status(404).json({message:"user not exist"});
+  }
+  users.splice(finduser,1);
+  await writerUser(users);
+  return res.status(201).json({message:"user delete successfully"});
 
-// const express= require("express");
-// const fs = require("node:fs");
-// const app = express();
-// app.use(express.json());
+ } catch (error) {
+     console.log({stack: stack.error , message:message.error});
+     
+  }});
+//delete all users
+userRouter.delete("/delete-user",async(req,res)=>{
+  try {
+  await writerUser([]);
+  return res.status(201).json({message:"All users delete successfully"});
 
-// app.patch("/user/:id", (req,res)=>{
-//     const userId = req.params.id;
-//     const userUpdate = req.body;
-//     fs.readFile("D:\\node_js\\Assignment-3\\users.json","utf-8",(err,data)=>{
+ } catch (error) {
+     console.log({stack: stack.error , message:message.error});
+     
+  }});
 
-//         if(err){
-//             return res.status(500).json({message:"Error reading file"});
-//         }
+  //get all user
+  userRouter.get("/user",async(req,res)=>{
+    try {
+      const users = await readUser();
+      if(users.length === 0){
+        return res.status(404).json({message:" users not found"});
 
-//         const userData = JSON.parse(data);
-//         const user = userData.users.find(user => user.id == userId);
+      }
+      return res.status(201).json({message:"All users get successfully",users});
 
-//         if(!user){
-//             return res.status(404).json({message:"User ID not found"});
-//         }
-//         if(userUpdate.name){
-//             user.name = userUpdate.name;
-//         }
-//         if(userUpdate.age){
-//             user.age = userUpdate.age;
-//         }
-//         if(userUpdate.email){
+    } catch (error) {
+       console.log({stack: stack.error , message:message.error});
+      
+    }
+  });
 
-//             const emailExist = userData.users.find(u => u.email === userUpdate.email && u.id != userId);
-//             if(emailExist){
-//                 return res.status(400).json({ message:"Email already exists"});
-//             }
-//             user.email = userUpdate.email;
-//         }
-//         fs.writeFile("D:\\node_js\\Assignment-3\\users.json",JSON.stringify(userData,null,2),(err)=>{
-//                 if(err){
-//                     return res.status(500).json({ message:"Error writing file"});
-//                 }
-//                 res.status(200).json({message:"User updated successfully",user});
-//             }
-//         );
-//     });
-// });
-// app.listen(3000,()=>{ console.log("Server running on port 3000");});
+  //get user by name
+ userRouter.get("/user/:name",async(req,res)=>{
+    try {
+      const {name}=req.params;
+      const users = await readUser();
+      const userNameFound = users.find(user => user.name ===name);
+      if(!userNameFound){
+        return res.status(404).json({message:"user not found"});
+      }
+      return res.status(201).json({message:"All users get successfully",users:userNameFound});
 
+    } catch (error) {
+       console.log({stack: stack.error , message:message.error});
+      
+    }
+  });
 
-// 3. Create an API that deletes a User by ID. The user id should be retrieved from either the request body or optional params. (1 Grade)
-// Note: Remember to delete the user from the file
-// o URL: DELETE /user{/:id}
+ // get user by id
+userRouter.get("/user/:id", async(req,res)=>{
+  try {
+    const {id} = req.params;
+    const users = await readUser();
+    const userIDFound = users.find( user => user.id === Number(id));
 
+    if(!userIDFound){
+      return res.status(404).json({ message:"user not found"});
+    }
+    return res.status(200).json({ message:"User found successfully", user:userIDFound});
+  } catch (error) {
+    console.log(error);
 
-// const express= require("express");
-// const fs= require("node:fs");
-// const { json } = require("node:stream/consumers");
-// const app= express();
-// app.use(express.json())
-// app.delete("/user{/:id}",(req,res)=>{
-//     const id = Number(req.params.id || req.body.id)
-//    fs.readFile("D:\\node_js\\Assignment-3\\users.json","utf-8",(err,data)=>{
-//     if(err){
-//         return res.status(500).json({message: "Error to reading file"})
-//     }
-//     const userData = JSON.parse(data)
-   
-//     const userIndex= userData.users.findIndex(user => user.id===id);
-//     if(userIndex===-1){
-//         return res.status(500).json({message: "Error to reading file"})
-//     }
-//     const deleteUser = userData.users.splice(userIndex,1);
-//     fs.writeFile("D:\\node_js\\Assignment-3\\users.json",JSON.stringify(userData,null,2),(err)=>{
-//       if(err){
-//         return res.status(500).json({message: "Error to writing file"})
-//     }
-//     return res.status(200).json({message: "user id  is Delet sucessfully",user:deleteUser[0]})
-//     })
-//    })
-// });
-// app.listen(3000,()=>{message: console.log("Server running on port 3000");
-// });
+ return res.status(500).json({message:"server error"});
+  }
+});
 
+//get minage
+userRouter.get("/user/filter", async (req, res) => {
+  try {
+    const minage = Number(req.query.minage);
+    if (isNaN(minage)) {
+      return res.status(400).json({message: "maxage is required"});
+    }
+    const users = await readUser();
+    const findMinAge = users.filter(user => user.age >= minage );
+    if (findMinAge.length === 0) {
+      return res.status(404).json({ message: "users not found"});
+    }
+    return res.status(200).json({ message: "users with maximum age found successfully", users: findMinAge });
 
+  } catch (error) {
+    console.log(error);
+  }
+});
+ //get maxage
+userRouter.get("/user/filter", async (req, res) => {
+  try {
+    const maxage = Number(req.query.maxage);
+    if (isNaN(maxage)) {
+      return res.status(400).json({message: "maxage is required"});
+    }
+    const users = await readUser();
+    const findMaxAge = users.filter(user => user.age <= maxage );
+    if (findMaxAge.length === 0) {
+      return res.status(404).json({ message: "users not found"});
+    }
+    return res.status(200).json({ message: "users with maximum age found successfully", users: findMaxAge });
 
-// 4. Create an API that gets a user by their name. The name will be provided as a query parameter. (1 Grade)
-// o URL: GET /user/getByName
+  } catch (error) {
+    console.log(error);
+  }
+});
 
-// const express =require("express");
-// const fs =require("node:fs");
-// const { json } = require("node:stream/consumers");
-// const app =express();
-// app.get("/user/getByName",(req,res)=>{
-    
-//     fs.readFile("D:\\node_js\\Assignment-3\\users.json","utf-8",(err,data)=>{
-//         if(err){
-//             return res.status(500).json({message: "Error to reading file"})
-//         }
-//         const userData = JSON.parse(data);
-//         const name = req.query.name;
-//         const user = userData.users.find(user => user.name ===name);
-//         if(!user){
-//               return res.status(404).json({message: "userNn ame not found"})
-//         }
-//          return res.status(200).json({message: "get user successfully",user: {
-//         id: user.id,
-//         name: user.name,
-//         age: user.age,
-//         email: user.email
-//     }})
-//     }
-// )
-
-// });
-// app.listen(3000,()=>{console.log("Server running on port 3000");})
-
-
-
-// 5. Create an API that gets all users from the JSON file. (0.5 Grade)
-// o URL: GET /user
-
-// const express =require("express");
-// const fs =require("node:fs");
-// const { json } = require("node:stream/consumers");
-// const app =express();
-// app.get("/user",(req,res)=>{
-    
-//     fs.readFile("D:\\node_js\\Assignment-3\\users.json","utf-8",(err,data)=>{
-//         if(err){
-//             return res.status(500).json({message: "Error to reading file"})
-//         }
-//         const userData = JSON.parse(data);
-//          return res.status(200).json({message: "get All user successfully",users: userData.users})
-//     }
-// )
-
-// });
-// app.listen(3000,()=>{console.log("Server running on port 3000");})
-
-
-
-// 6. Create an API that filters users by minimum age. (1 Grade)
-// o URL: GET /user/filter
-//Filter ::minAge
-
-
-// const express =require("express");
-// const fs =require("node:fs");
-// const { json } = require("node:stream/consumers");
-// const app =express();
-// app.get("/user/filter",(req,res)=>{
-//     const minage = Number(req.query.minage);
-//     fs.readFile("D:\\node_js\\Assignment-3\\users.json","utf-8",(err,data)=>{
-//         if(err){
-//             return res.status(500).json({message: "Error to reading file"})
-//         }
-//         const userData = JSON.parse(data);
-//         const users = userData.users.filter(user => user.age > minage);
-//         if(users.length===0){
-//               return res.status(404).json({message: "user name not found"})
-//         }
-//          return res.status(200).json({message: "Users filtered successfully",users:users
-       
-//     })
-//     }
-// )
-
-// });
-// app.listen(3000,()=>{console.log("Server running on port 3000");})
+app.listen(PORT, () => {
+  console.log(`server is Running on port :${PORT}`);
+});
 
 
-// //Filter ::maxAge
-// const express =require("express");
-// const fs =require("node:fs");
-// const { json } = require("node:stream/consumers");
-// const app =express();
-// app.get("/user/filter",(req,res)=>{
-//     const maxage = Number(req.query.maxage);
-//     fs.readFile("D:\\node_js\\Assignment-3\\users.json","utf-8",(err,data)=>{
-//         if(err){
-//             return res.status(500).json({message: "Error to reading file"})
-//         }
-//         const userData = JSON.parse(data);
-//         const users = userData.users.filter(user => user.age < maxage);
-//         if(users.length===0){
-//               return res.status(404).json({message: "user name not found"})
-//         }
-//          return res.status(200).json({message: "Users filtered successfully",users:users
-       
-//     })
-//     }
-// )
-
-// });
-// app.listen(3000,()=>{console.log("Server running on port 3000");})
-
-
-
-
-
-// 7. Create an API that gets User by ID. (0.5 Grade)
-// o URL: GET /user/:id
-
-// const express =require("express");
-// const fs =require("node:fs");
-// const { json } = require("node:stream/consumers");
-// const app =express();
-// app.get("/user/:id",(req,res)=>{
-//     const id = Number(req.params.id || req.body.id);
-//     fs.readFile("D:\\node_js\\Assignment-3\\users.json","utf-8",(err,data)=>{
-//         if(err){
-//             return res.status(500).json({message: "Error to reading file"})
-//         }
-//         const userData = JSON.parse(data);
-//         const user = userData.users.find(user => user.id ===id);
-//         if(!user){
-//               return res.status(404).json({message: "user name not found"})
-//         }
-//          return res.status(200).json({message: "get user successfully",user: {
-//         id: user.id,
-//         name: user.name,
-//         age: user.age,
-//         email: user.email
-//     }})
-//     }
-// )
-
-// });
-// app.listen(3000,()=>{console.log("Server running on port 3000");})
 
 
 // Important Notes about postman
@@ -359,3 +286,4 @@
 // 1- Solve the problem Longest Common Prefix on LeetCode
 // 2- Inside your assignment folder, create a SEPARATE FILE and name it “bonus.js”
 // 3- Copy the code that you have submitted on the website inside ”bonus.js” file
+
