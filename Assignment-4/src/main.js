@@ -75,10 +75,12 @@ productRouter.post("/", async (req, res) => {
 });
 //● Retrieve all products.
 productRouter.get("/", async (req, res) => {
+    const {page,limit} = req.query;
+    const offset = (page - 1 )* limit;
     try {
-        const { rows } = await pool.query("SELECT * FROM products");
+        const { rows } = await pool.query(`SELECT * FROM products ORDER BY id LIMIT $1 OFFSET $2`,[limit,offset]);
         if(rows.length===0) res.status(404).json({message:"products is not found", success:true ,success: false })
-        res.status(201).json({ message: "retrieve all products successfully", success: true, data: rows });
+        res.status(200).json({ message: "retrieve all products successfully", success: true, data: rows });
     } catch (error) {
         res.status(500).json({ message: error.message, success: false });
     }
@@ -211,6 +213,7 @@ productRouter.delete("/", async (req, res) => {
 })
 
 //===========================================================================================
+
 //● Create a supplier.
 supplierRouter.post("/", async(req,res)=>{
     const {name,ContactNumber}=req.body;
@@ -233,9 +236,10 @@ supplierRouter.post("/", async(req,res)=>{
 
 //● Retrieve all suppliers.
 supplierRouter.get("/", async(req,res)=>{
-    
+    const {page,limit} =req.query;
+    const offset = (page - 1 )*limit;
     try {
-         const { rows } = await pool.query(`SELECT * FROM suppliers`);
+         const { rows } = await pool.query(`SELECT * FROM suppliers ORDER BY id LIMIT $1 OFFSET $2 `,[limit,offset]);
          if(rows.length===0) res.status(404).json({message:"Suppliers is not found", success:true ,success: false });
         res.status(200).json({message: "supplier is  All Retrieve successfully" , success:true , data:rows});
     } catch (error) {
@@ -290,7 +294,7 @@ supplierRouter.put("/:id", async(req,res)=>{
 });
 
 
-//● Delete a supplier.
+//● Delete a supplier by id.
 supplierRouter.delete("/:id", async(req,res)=>{
     const {id} = req.params;
     try {
@@ -341,9 +345,11 @@ sallerRouter.post("/", async (req, res) => {
 
 // ● Retrieve all sales.
 sallerRouter.get("/", async(req,res)=>{
+    const {page,limit} = req.query;
+    const offset = (page - 1 )*limit;
     
     try {
-         const { rows } = await pool.query(`SELECT * FROM sales`);
+         const { rows } = await pool.query(`SELECT * FROM sales ORDER BY id LIMIT $1 OFFSET $2`,[limit,offset]);
          if(rows.length===0) res.status(404).json({message:"sales is not found", success:true ,success: false });
         res.status(200).json({message: "sales is  All Retrieve successfully" , success:true , data:rows});
     } catch (error) {
