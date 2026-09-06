@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum role_user {
+  user
+  admin
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  name      String    @db.VarChar(150)
+  email     String    @unique @db.VarChar(150) 
+  password  String    @db.VarChar(150) @map("password_hash")
+  role      role_user @default(user)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  isDeleted Boolean @default(false) @map("is_delete")
+  posts    Post[]
+  comments Comment[]
+
+  @@map("users")
+}
+
+model Post {
+  id        Int       @id @default(autoincrement())
+  title      String    @db.VarChar(150)
+  content     String 
+  userId Int @map("user_id")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  isDeleted Boolean  @default(false) @map("is_deleted")
+  user User @relation(fields: [userId],references: [id], onDelete: Cascade)
+  comments Comment[]
+  @@map("posts")
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String   @db.Text
+  postId    Int      @map("post_id")
+  userId    Int      @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+

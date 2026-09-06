@@ -1,0 +1,7 @@
+CREATE TABLE otp (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    otp VARCHAR(6) NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    verified BOOLEAN DEFAULT FALSE
+);
