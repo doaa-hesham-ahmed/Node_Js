@@ -1,0 +1,328 @@
+->net start mongoDB
+->mongosh
+
+1-db.createCollection("books", {
+|     validator: {
+|         $jsonSchema: {
+|             bsonType: "object",
+|             required: ["title"],
+|             properties: {
+|                 title: {
+|                     bsonType: "string",
+|                     minLength: 1
+|                 }
+|             }
+|         }
+|     }
+| })
+outPut:{ ok: 1 }
+
+
+2-db.authors.insertOne({name:"Ali",email:"ali@gmail.com"});
+outPut:{
+  acknowledged: true,
+  insertedId: ObjectId('6aa62e03eeb9645c62bf675e')
+}
+
+3-db.createCollection("logs",{capped:true,size:1048576});
+outPut:{ ok: 1 }
+
+4- db.books.createIndex({title:1});
+outPut:title_1
+
+5-db.books.insertOne({title:"Book1",author:"Ali",year:"1937",genres:["fantasy","Adventure"]});
+outPut:{
+  acknowledged: true,
+  insertedId: ObjectId('6aa6311eeeb9645c62bf6760')
+}
+
+6- db.books.insertMany([
+        {title:"The Future",author:"Ahmed",year:"2020",genres:["fantasy","Adventure"]},
+        {title:"MongoDB Basic",author:"sara",year:2024,genres:["Database","technology"]},
+        {title:"Node.js",author:"doaa",year:2026,genres:["programming","technology"]}
+        ]);
+outPut:{
+  acknowledged: true,
+  insertedIds: {
+    '0': ObjectId('6aa632bceeb9645c62bf6761'),
+    '1': ObjectId('6aa632bceeb9645c62bf6762'),
+    '2': ObjectId('6aa632bceeb9645c62bf6763')
+  }
+}
+
+7-db.logs.insertOne({message:"log created successfully",action:"Browed"});
+outPut:{
+  acknowledged: true,
+  insertedId: ObjectId('6aa633b9eeb9645c62bf6765')
+}
+
+8-test> db.books.updateOne({title:"Future"},{$set:{year:2022}});
+outPut:{
+  acknowledged: true,
+  insertedId: null,
+  matchedCount: 1,
+  modifiedCount: 1,
+  upsertedCount: 0
+}
+
+9-db.books.findOne({title:"Brave New World"});
+outPut:{
+  _id: ObjectId('6aa63658eeb9645c62bf6766'),
+  title: 'Brave New World',
+  author: 'ali',
+  year: 2020,
+  geners: [ 'dddd', 'DDD' ]
+}
+
+
+10-db.books.find({year:{$gte:1990,$lte:2022}})
+outPut:[
+  {
+    _id: ObjectId('6aa632bceeb9645c62bf6761'),
+    title: 'Future',
+    author: 'Ahmed',
+    year: 2022,
+    genres: [ 'fantasy', 'Adventure' ]
+  },
+  {
+    _id: ObjectId('6aa63658eeb9645c62bf6766'),
+    title: 'Brave New World',
+    author: 'ali',
+    year: 2020,
+    geners: [ 'dddd', 'DDD' ]
+  }
+]
+
+11-db.books.findOne({genres:{$in:["technology"]}});
+output:{
+  _id: ObjectId('6aa632bceeb9645c62bf6762'),
+  title: 'MongoDB Basic',
+  author: 'sara',
+  year: 2024,
+  genres: [ 'Database', 'technology' ]
+}
+
+12- db.books.find().sort({year:-1}).skip(2).limit(3);
+outPut:[
+  {
+    _id: ObjectId('6aa632bceeb9645c62bf6762'),
+    title: 'MongoDB Basic',
+    author: 'sara',
+    year: 2024,
+    genres: [ 'Database', 'technology' ]
+  },
+  {
+    _id: ObjectId('6aa632bceeb9645c62bf6761'),
+    title: 'Future',
+    author: 'Ahmed',
+    year: 2022,
+    genres: [ 'fantasy', 'Adventure' ]
+  },
+  {
+    _id: ObjectId('6aa63658eeb9645c62bf6766'),
+    title: 'Brave New World',
+    author: 'ali',
+    year: 2020,
+    geners: [ 'dddd', 'DDD' ]
+  }
+]
+
+13- db.books.find({year:{$type:"int"}});
+output:[
+  {
+    _id: ObjectId('6aa632bceeb9645c62bf6761'),
+    title: 'Future',
+    author: 'Ahmed',
+    year: 2022,
+    genres: [ 'fantasy', 'Adventure' ]
+  },
+  {
+    _id: ObjectId('6aa632bceeb9645c62bf6762'),
+    title: 'MongoDB Basic',
+    author: 'sara',
+    year: 2024,
+    genres: [ 'Database', 'technology' ]
+  },
+  {
+    _id: ObjectId('6aa632bceeb9645c62bf6763'),
+    title: 'Node.js',
+    author: 'doaa',
+    year: 2026,
+    genres: [ 'programming', 'technology' ]
+  },
+  {
+    _id: ObjectId('6aa63658eeb9645c62bf6766'),
+    title: 'Brave New World',
+    author: 'ali',
+    year: 2020,
+    geners: [ 'dddd', 'DDD' ]
+  }
+]
+
+-> db.books.find({year:{$type:"string"}});
+outPut:[
+  {
+    _id: ObjectId('6aa6311eeeb9645c62bf6760'),
+    title: 'Book1',
+    author: 'Ali',
+    year: '1937',
+    genres: [ 'fantasy', 'Adventure' ]
+  }
+]
+
+
+14- db.books.find({genres:{$nin:["Horror","Science Fiction"]}});
+outPut:[
+  {
+    _id: ObjectId('6aa6311eeeb9645c62bf6760'),
+    title: 'Book1',
+    author: 'Ali',
+    year: '1937',
+    genres: [ 'fantasy', 'Adventure' ]
+  },
+  {
+    _id: ObjectId('6aa632bceeb9645c62bf6761'),
+    title: 'Future',
+    author: 'Ahmed',
+    year: 2022,
+    genres: [ 'fantasy', 'Adventure' ]
+  },
+  {
+    _id: ObjectId('6aa632bceeb9645c62bf6762'),
+    title: 'MongoDB Basic',
+    author: 'sara',
+    year: 2024,
+    genres: [ 'Database', 'technology' ]
+  },
+  {
+    _id: ObjectId('6aa632bceeb9645c62bf6763'),
+    title: 'Node.js',
+    author: 'doaa',
+    year: 2026,
+    genres: [ 'programming', 'technology' ]
+  },
+  {
+    _id: ObjectId('6aa63658eeb9645c62bf6766'),
+    title: 'Brave New World',
+    author: 'ali',
+    year: 2020,
+    geners: [ 'dddd', 'DDD' ]
+  }
+]
+->db.books.find({genres:{$nin:["technology","Adventure"]}});
+outPut:[
+  {
+    _id: ObjectId('6aa63658eeb9645c62bf6766'),
+    title: 'Brave New World',
+    author: 'ali',
+    year: 2020,
+    geners: [ 'dddd', 'DDD' ]
+  }
+]
+
+
+15-db.books.deleteMany({year:{$lt:2000}});
+outPut:{ acknowledged: true, deletedCount: 0 }
+
+->db.books.deleteMany({year:{$lt:2022}});
+outPut:{ acknowledged: true, deletedCount: 1 }
+
+16-db.books.aggregate([{$match:{year:{$gt:2000}}},{$sort:{year:-1}}])
+outPut:[
+  {
+    _id: ObjectId('6aa632bceeb9645c62bf6763'),
+    title: 'Node.js',
+    author: 'doaa',
+    year: 2026,
+    genres: [ 'programming', 'technology' ]
+  },
+  {
+    _id: ObjectId('6aa632bceeb9645c62bf6762'),
+    title: 'MongoDB Basic',
+    author: 'sara',
+    year: 2024,
+    genres: [ 'Database', 'technology' ]
+  },
+  {
+    _id: ObjectId('6aa632bceeb9645c62bf6761'),
+    title: 'Future',
+    author: 'Ahmed',
+    year: 2022,
+    genres: [ 'fantasy', 'Adventure' ]
+  }
+]
+
+17- db.books.aggregate([{$match:{year:{$gt:2000}}},{$project:{title:1,author:1,year:1,_id:0}},{$sort:{year:-1}}])
+outPut:[
+  { title: 'Node.js', author: 'doaa', year: 2026 },
+  { title: 'MongoDB Basic', author: 'sara', year: 2024 },
+  { title: 'Future', author: 'Ahmed', year: 2022 }
+]
+
+18- db.books.aggregate([{$unwind:"$genres"}]);
+outPut:[
+  {
+    _id: ObjectId('6aa6311eeeb9645c62bf6760'),
+    title: 'Book1',
+    author: 'Ali',
+    year: '1937',
+    genres: 'fantasy'
+  },
+  {
+    _id: ObjectId('6aa6311eeeb9645c62bf6760'),
+    title: 'Book1',
+    author: 'Ali',
+    year: '1937',
+    genres: 'Adventure'
+  },
+  {
+    _id: ObjectId('6aa632bceeb9645c62bf6761'),
+    title: 'Future',
+    author: 'Ahmed',
+    year: 2022,
+    genres: 'fantasy'
+  },
+  {
+    _id: ObjectId('6aa632bceeb9645c62bf6761'),
+    title: 'Future',
+    author: 'Ahmed',
+    year: 2022,
+    genres: 'Adventure'
+  },
+  {
+    _id: ObjectId('6aa632bceeb9645c62bf6762'),
+    title: 'MongoDB Basic',
+    author: 'sara',
+    year: 2024,
+    genres: 'Database'
+  },
+  {
+    _id: ObjectId('6aa632bceeb9645c62bf6762'),
+    title: 'MongoDB Basic',
+    author: 'sara',
+    year: 2024,
+    genres: 'technology'
+  },
+  {
+    _id: ObjectId('6aa632bceeb9645c62bf6763'),
+    title: 'Node.js',
+    author: 'doaa',
+    year: 2026,
+    genres: 'programming'
+  },
+  {
+    _id: ObjectId('6aa632bceeb9645c62bf6763'),
+    title: 'Node.js',
+    author: 'doaa',
+    year: 2026,
+    genres: 'technology'
+  }
+]
+
+19- db.logs.aggregate([{$addFields:{convertedBookId:{$toObjectId:"$Book_id"}}},{$lookup:{from:"books",localField:"convertedBookId",foreignField:"_id",as:"book_datails"}},{$unwind:"$book_datails"},{$project:{_id:0,action:1,"book_datails.title":1,"book_datails.author":1,"book_datails.year":1}}]);
+outPut:[
+  {
+    action: 'Browed',
+    book_datails: { title: 'Future', author: 'Ahmed', year: 2022 }
+  }
+]

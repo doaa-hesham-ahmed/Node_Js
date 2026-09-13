@@ -1,0 +1,11 @@
+{
+  "main": "src/main.js",
+  "scripts": {
+    "dev": "nodemon ."
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mongodb": "^7.6.0"
+  }
+}
