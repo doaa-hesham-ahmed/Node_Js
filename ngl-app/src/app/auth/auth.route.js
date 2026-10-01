@@ -7,5 +7,7 @@ authRouter.post('/register',authController.register);
 authRouter.patch('/verify-account',authController.verifyAcount);
 authRouter.post('/login',authController.login);
 authRouter.post('/send-otp',authController.sendotp);
+authRouter.patch('/reset-password',authController.resetPassword)
+authRouter.post('/login-with-google',authController.loginWithGoogle)
 
 export default authRouter ;

@@ -56,3 +56,5 @@ ALTER TABLE "comments" ADD CONSTRAINT "comments_user_id_fkey" FOREIGN KEY ("user
 SELECT * FROM posts;
 
 SELECT * FROM comments;
+
+-- CREATE DATABASE smart_portage;
