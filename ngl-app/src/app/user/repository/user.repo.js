@@ -7,3 +7,11 @@ export async function updateToUserByEmail (email,updateDate){
         {returnDocument:'after'}
     )
 }
+export async function findUserById(id){
+    return await User.findOne({
+        _id:id,
+        isDeleted:false,
+        },
+       // {password:-password},
+    )
+}

@@ -1,10 +1,11 @@
-import { toMs } from "../../../common/utils/time.js";
+import { toMs } from "../../../pkg/utils/time.js";
 import * as authService from "../service/auth.service.js";
-import { validateBody } from "../../../common/validation/validation.js";
+import { validateBody } from "../../../lib/validation/validation.js";
 import { registerODT, verifyAcountODT, loginODT, sendOtpODT, resetPasswordODT } from "../dto/auth.dto.js";
 
 export async function register(req, res, next) {
     try {
+        
         const data = validateBody(registerODT, req.body);
         const userCreated = await authService.register(data);
         res.status(201).json({

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import * as authController from "./controller/auth.controller.js";
+import { idempotency } from "../../lib/idempotency/idempotency.js";
 
 const authRouter = Router();
 
@@ -7,7 +8,7 @@ authRouter.post('/register',authController.register);
 authRouter.patch('/verify-account',authController.verifyAcount);
 authRouter.post('/login',authController.login);
 authRouter.post('/send-otp',authController.sendotp);
-authRouter.patch('/reset-password',authController.resetPassword)
+authRouter.patch('/reset-password',idempotency(),authController.resetPassword)
 authRouter.post('/login-with-google',authController.loginWithGoogle)
 
 export default authRouter ;

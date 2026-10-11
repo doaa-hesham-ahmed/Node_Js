@@ -49,7 +49,11 @@ const userSchema = new Schema(
         default:'male'
 
      },
+        profilePicPath:String,
+        coverImagePath:[String],
+        cvPath:String,
     },
+
     {
      timestamps:{
         createdAt:true,
