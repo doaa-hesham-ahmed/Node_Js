@@ -5,13 +5,18 @@ import { allowedTypes } from "./file.validation.js";
 
 export function uploadFile(allowTypes = allowedTypes.images) {
     return multer({
-        fileFilter(_req, file, cb) {
-            if (!allowTypes.includes(file.mimetype)) {
-                return cb(new AppError("Invalid file format", 400));
-            }
-            cb(null, true);
-        },
+        
+      fileFilter(_req, file, cb) {
+    console.log("File name:", file.originalname);
+    console.log("Received MIME type:", file.mimetype);
+    console.log("Allowed types:", allowTypes);
 
+    if (!allowTypes.includes(file.mimetype)) {
+        return cb(new AppError("Invalid file format", 400));
+    }
+
+    cb(null, true);
+},
         limits: {
             fileSize: 5 * 1024 * 1024,
         },
