@@ -1,11 +1,12 @@
 import { Router } from "express";
-import * as messageController from "../message/controller/message.controller.js"
-import { Guard } from "../../lib/auth/guard.js";
+import anonymousmessageRouter from "./anonymous-message/message.route.js";
+import conversationRouter from "./conversation/conversation.route.js";
+import conversationMessageRouter from './conversation-message/conversation-message.route.js';
+import identifiedReqRouter from "./identity-request/identity-request.route.js";
 const messageRouter = Router();
-messageRouter.post('/',messageController.createMessage);
-messageRouter.post('/public',Guard,messageController.createMessage);
-messageRouter.get('/',Guard,messageController.getAllMessages);
-messageRouter.get('/messageId',Guard,messageController.getMessagesById);
-messageRouter.delete('/messageId',Guard,messageController.deleteMessage);
 
+messageRouter.use('/anonymous',anonymousmessageRouter);
+messageRouter.use('/conversationMess',conversationMessageRouter)
+messageRouter.use('/conversation',conversationRouter)
+messageRouter.use('/identify',identifiedReqRouter)
 export default messageRouter ;

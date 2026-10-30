@@ -1,0 +1,14 @@
+{
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "concurrently \"tsc --watch\" \"node --watch dist/index.js\"",
+    "start": "nodemon dist/index.js",
+    "build": "tsc --watch"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
+  },
+  "dependencies": {
+    "express": "^5.3.0"
+  }
+}

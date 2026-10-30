@@ -2,16 +2,18 @@
 import * as authRepository from "../repository/auth.repo.js";
 import * as otpRepository from "../repository/otp.repo.js"
 import * as userRepository from "../../user/repository/user.repo.js"
-import { toMs } from "../../../pkg/utils/time.js";
+import { toMs, toSeconds } from "../../../pkg/utils/time.js";
+
 
 import { invalidCode, invalidPassword, otpExpired } from "../error.js";
 import { userAlreadyExist, userAlreadyVerified, userNotExist } from "../../user/error.js";
 import { generatedOtp } from "../../../lib/utils/otp.js";
-import { generatedToken } from "../utils/token.js";
+import { generateToken } from "../utils/token.js";
 import { comparePassword, hashedPassword } from "../utils/hash.js";
 import { AppError } from "../../../lib/error/error.js";
 import { verifyGoogleToken } from "../../../lib/utils/google.auth.js";
 import { mailjetProvider } from "../../../lib/email/init.js";
+import { cacheProvider } from "../../../lib/cache/init.js";
 
 export async function register(userDate) {
     // 1-check userByEmail Exist
@@ -27,13 +29,17 @@ export async function register(userDate) {
 
     // 4-generate & send email verification
     const otp = generatedOtp();
-    
-    // Fixed: Added await here so the OTP saves before the email sends
-    await otpRepository.createOtp({
-        code: otp,
-        email: userDate.email,
-        expiredAt: new Date(Date.now() + toMs(5, 'minutes'))
-    });
+
+// console.log(`${userDate.email}: ${otp}`);
+
+    //Fixed: Added await here so the OTP saves before the email sends
+    // await otpRepository.createOtp({
+    //     code: otp,
+    //     email: userDate.email,
+    //     expiredAt: new Date(Date.now() + toMs(5, 'minutes'))
+    // });
+await cacheProvider.set(`otp:${createdUser._id.toString()}`, otp, toSeconds(3,'minutes'));
+
     await mailjetProvider.sendMail(
         userDate.email,
         'verification code',
@@ -41,7 +47,7 @@ export async function register(userDate) {
         <div style=" font-family: Arial, Helvetica, sans-serif; background-color: #f4f7fb; padding: 40px 20px; ">
          <div style=" max-width: 500px; margin: auto; background-color: #ffffff; border-radius: 12px; padding: 35px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); ">
           <h1 style=" color: #2563eb; text-align: center; margin-bottom: 10px; ">
-           Verify Your Email
+           Verify Your Email is
             </h1> 
             <p style=" color: #555; font-size: 16px; text-align: center; line-height: 1.6; ">
              Welcome! Thank you for creating an account with us. Please use the verification code below to verify your email address. 
@@ -60,8 +66,8 @@ export async function register(userDate) {
                      If you did not create this account, you can safely ignore this email. </p>
                       </div> </div> `
     )
-    //5-save otp into DB
-    return createdUser;
+    // //5-save otp into DB
+     return createdUser;
     
 }
 
@@ -73,39 +79,39 @@ export async function verifyAcount(email, code) {
     //1.2- isVerifed == true -> throw error "user is verified" 
     if (User.isVerify === true) throw userAlreadyVerified;
     //2- check otp validation
-    const otp = await otpRepository.getOtpByEmail(email)
+    // const otp = await otpRepository.getOtpByEmail(email)
+    const otp = await cacheProvider.get(`otp:${User._id.toString()}`)
     //2.1-not exist into DB -> throw error "otp expired"
     if (!otp) throw otpExpired;
     //2.2- code not equel code -> throw error "invalid code"
-    if (String(otp.code) !== String(code)) throw invalidCode;
+    if (otp !== code) throw invalidCode;
     //3-switch is verifed = true 
     const updatedUSer = await userRepository.updateToUserByEmail(email, { isVerify: true });
     //4-delete otp from DB
-    await otpRepository.deleteOtp(email);
+    // await otpRepository.deleteOtpByEmail(email)
+    await cacheProvider.del(`otp:${User._id.toString()}`)
     return updatedUSer;
 }
 
 export async function login(email, password) {
-    // 1 - Check user existence
     const User = await authRepository.findUserByEmail(email);
-    if (!User)  throw us;
 
-    // 1.1 - Check verification status if required
-    if (User.isVerify !== true) throw new AppError("Please verify your account first", 400);
+    if (!User) throw us;
 
-    // 2 - Compare password
-    const matching = await comparePassword(password, User['password']);
+    if (User.isVerify !== true) {
+        throw new AppError("Please verify your account first", 400);
+    }
+
+    const matching = await comparePassword(password, User.password);
+
     if (!matching) throw invalidPassword;
-    
 
-    // 3 - Generate token 
-    const token = generatedToken({
-        id: User._id,
+    return generateToken({
+        id: User._id.toString(),
         name: User.name,
         email: User.email,
+        role: User.role
     });
-
-    return token;
 }
 
 export async function sendOtp(email) {
@@ -115,13 +121,18 @@ export async function sendOtp(email) {
      if(!User) throw userNotExist;
      //2-delete any otp
      await otpRepository.deleteOtpByEmail(email)
+     await cacheProvider.del(`otp:${User._id.toString()}`);
+   
      //3-generate otp 
      const otp = generatedOtp();
-     await otpRepository.createOtp({
-        code:otp,
-        email:email,
-        expiredAt:Date.now()+toMs(3,'minutes')
-     })
+      console.log(`${User.email}: ${otp}`);
+
+    //  await otpRepository.createOtp({
+    //     code:otp,
+    //     email:email,
+    //     expiredAt:Date.now()+toMs(3,'minutes')
+    //  })
+await cacheProvider.set(`otp:${User._id.toString()}`, otp, toMs(3,'minutes'));
      //4-send otp email
     await mailjetProvider.sendMail(
     email,
@@ -217,43 +228,54 @@ export async function sendOtp(email) {
 }
 
 export async function resetPassword(email, code, newPassword) {
+    // 1. Find user by email
+    const User = await authRepository.findUserByEmail(email);
+
+    if (!User) throw userNotFound;
+
     // 1 - Await the OTP from otpRepository
-    const otp = await otpRepository.getOtpByEmail(email);
+    // const otp = await otpRepository.getOtpByEmail(email);
+    const otp = await cacheProvider.get(`otp:${User._id.toString()}`);
     if (!otp) throw otpExpired;
     
     // 2 - Compare codes safely
-    if (String(otp.code) !== String(code)) throw invalidCode;
+    if (String(otp) !== String(code)) throw invalidCode;
     
     // 3 - Hash new password and update user using userRepository
     const hashedpassword = await hashedPassword(newPassword);
     await userRepository.updateToUserByEmail(email, { password: hashedpassword });
     
     // 4 - Delete OTP using otpRepository
-    await otpRepository.deleteOtpByEmail(email);
+    // await otpRepository.deleteOtpByEmail(email);
+    await cacheProvider.del(`otp:${User._id.toString()}`);
 }
 
-export async function loginWithGoogle (idToken) {
-    //get idToken from FE
-   const payload = await verifyGoogleToken(idToken);
-    //verify IdToken
-    const user = await authRepository.findUserByEmail(payload.email)
-    //get payload from idToken
-    if(user){
-        await generatedToken({
-            id:user._id,
-            email:user.email,
-        })
+
+export async function loginWithGoogle(idToken) {
+    // 1. Verify Google's ID token
+    const payload = await verifyGoogleToken(idToken);
+
+    // 2. Find user by email
+    let user = await authRepository.findUserByEmail(payload.email);
+
+    // 3. Create user if they don't exist
+    if (!user) {
+        user = await authRepository.createUser({
+            name: payload.name,
+            email: payload.email,
+            provider: "google",
+            isVerify: true,
+        });
     }
-    //if exist -> generate token
-    const createdUser = await authRepository.createUser({
-        name:payload.name,
-        email:payload.email,
-        provider:'google',
-        isVerify:true,
-    })
-   await generatedToken({
-            id:createdUser._id,
-            email:createdUser.email,
-        })
-    //if not exist -> create user -> generate token
+
+    // 4. Generate access and refresh tokens
+    const tokens = generateToken({
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: user.role,
+    });
+
+    // 5. Return tokens to the controller
+    return tokens;
 }

@@ -1,4 +1,4 @@
-import { validateBody } from "../../../lib/validation/validation.js";
+import { validateBody } from "../../../../lib/validation/validation.js";
 import { sendMessage } from "../dto/message.dto.js";
 import * as messageService from "../service/message.service.js"
 

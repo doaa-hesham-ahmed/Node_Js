@@ -1,7 +1,8 @@
 {
   "main": "src/server.js",
   "scripts": {
-    "dev": "nodemon ."
+    "dev": "node src/server.js",
+     "start": "nodemon ."
   },
   "type": "module",
   "dependencies": {

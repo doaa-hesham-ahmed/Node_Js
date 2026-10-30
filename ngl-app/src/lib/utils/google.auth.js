@@ -11,6 +11,6 @@ export async function verifyGoogleToken(idToken) {
  return ticket.getPayload();
 }
   catch (error) {
-    throw new AppError('invalid goofle token',403)
+    throw new AppError('invalid google token',403)
   }
 }

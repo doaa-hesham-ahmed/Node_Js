@@ -1,6 +1,6 @@
-import { AppError } from "../../../lib/error/error.js";
-import { userNotExist } from "../../user/error.js";
-import * as userRepository from "../../user/repository/user.repo.js";
+import { AppError } from "../../../../lib/error/error.js";
+import { userNotExist } from "../../../user/error.js";
+import * as userRepository from "../../../user/repository/user.repo.js";
 import * as messageRepository from "../repository/message.repo.js";
 
 export async function createMessage(content,receiver,sender){
